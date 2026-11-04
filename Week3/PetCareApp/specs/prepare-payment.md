@@ -13,21 +13,21 @@ What will the feature do? What will it NOT do?
 **Will do:**
 - Accept a service ID in the URL
 - Look up the service in a mock catalogue
-- Return the official service name, amount, currency and status as JSON
+- Return the official service name, amount, currency and status as JSON (API)
+- Show the services and the payment flow as EJS pages (see section 9)
+- Require login for the payment pages
 
 **Will NOT do:**
 - Charge any money
 - Call a real payment gateway
 - Accept a client-supplied amount
-- Require login
 - Create new database tables
-- Create new EJS pages
 
 ## 3. Request
 What HTTP method and URL are used? What input is needed?
 
 - Method: GET
-- URL: `/payments/prepare/:serviceId`
+- URL: `/api/payments/prepare/:serviceId` (JSON API, no login required)
 - Input: only the `serviceId` path parameter (number)
 - The server uses the catalogue price. The client must not send an amount.
 
@@ -84,5 +84,23 @@ What happens when the requested service does not exist?
 ## 8. Open questions
 What has not yet been agreed? Do not silently invent an answer
 
-- None for this classroom mock endpoint. Scope is fully defined.
+- Should the JSON API (`/api/...`) be removed once the EJS pages are accepted?
+
+## 9. EJS pages
+
+| Method | URL | Login | View | Purpose |
+|--------|-----|-------|------|---------|
+| GET  | `/services` | No  | `services.ejs` | List all services with price and a "Book & Pay" button |
+| GET  | `/payments/prepare/:serviceId` | Yes | `preparePayment.ejs` | Order summary + mock outcome dropdown (no amount field) |
+| POST | `/payments/mock/:serviceId` | Yes | `paymentResult.ejs` | Show payment ID, reference, payment status and booking status |
+
+- Unknown service ID on a page route: redirect to `/services` with the flash message "Service not found".
+- `testStatus` accepts only `APPROVED`, `PENDING` or `DECLINED`. Anything else is treated as `PENDING`.
+
+**Page acceptance criteria:**
+- AC6: `/services` shows 3 cards: Vaccination S$35.00, Pet Grooming S$50.00, Boarding S$80.00
+- AC7: Visiting `/payments/prepare/1` while logged out redirects to `/login`
+- AC8: Visiting `/payments/prepare/1` while logged in shows Vaccination, S$35.00, SGD, READY_FOR_PAYMENT
+- AC9: Visiting `/payments/prepare/999` while logged in redirects to `/services` with "Service not found"
+- AC10: Submitting APPROVED / PENDING / DECLINED shows booking status CONFIRMED / AWAITING_PAYMENT / PAYMENT_FAILED
 ```
