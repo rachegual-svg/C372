@@ -10,4 +10,10 @@ function getPetsByOwner(ownerId, callback) {
   connection.query(sql, [ownerId], callback);
 }
 
-module.exports = { createPet, getPetsByOwner };
+// One pet, only if it belongs to this owner (empty result otherwise)
+function getPetForOwner(petId, ownerId, callback) {
+  const sql = 'SELECT id, name, species FROM pets WHERE id = ? AND owner_id = ?';
+  connection.query(sql, [petId, ownerId], callback);
+}
+
+module.exports = { createPet, getPetsByOwner, getPetForOwner };

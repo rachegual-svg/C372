@@ -38,7 +38,7 @@
 
     <% if (!bookings.length) { %>
       <div class="bookings-empty">
-        <p class="mb-3">You have no bookings yet.</p>
+        <p class="mb-3">No bookings yet.</p>
         <a href="/services" class="btn btn-primary">Browse Services</a>
       </div>
     <% } else { %>
@@ -47,28 +47,44 @@
           <thead>
             <tr>
               <th scope="col">Booking #</th>
-              <th scope="col">Date</th>
+              <th scope="col">Date &amp; Time</th>
               <th scope="col">Pet</th>
               <th scope="col">Service</th>
               <th scope="col">Price</th>
               <th scope="col">Booking Status</th>
               <th scope="col">Payment Status</th>
+              <th scope="col">Actions</th>
             </tr>
           </thead>
           <tbody>
             <% for (let i = 0; i < bookings.length; i++) { %>
+              <% const b = bookings[i]; %>
               <tr>
-                <td><%= bookings[i].booking_id %></td>
-                <td><%= bookings[i].booking_date %></td>
-                <td><%= bookings[i].pet_name %></td>
-                <td><%= bookings[i].service_name %></td>
-                <td>S$<%= Number(bookings[i].booked_price).toFixed(2) %></td>
-                <td><span class="<%= statusClass(bookings[i].booking_status) %>"><%= bookings[i].booking_status %></span></td>
+                <td><%= b.booking_id %></td>
+                <td class="text-nowrap"><%= b.booking_date %> · <%= b.time_slot %></td>
+                <td><%= b.pet_name %></td>
                 <td>
-                  <% if (bookings[i].payment_status) { %>
-                    <span class="<%= statusClass(bookings[i].payment_status) %>"><%= bookings[i].payment_status %></span>
+                  <% if (b.service_icon) { %><span class="service-icon" aria-hidden="true"><%= b.service_icon %></span><% } %>
+                  <%= b.service_name %>
+                </td>
+                <td>S$<%= Number(b.booked_price).toFixed(2) %></td>
+                <td><span class="<%= statusClass(b.booking_status) %>"><%= b.booking_status %></span></td>
+                <td>
+                  <% if (b.payment_status) { %>
+                    <span class="<%= statusClass(b.payment_status) %>"><%= b.payment_status %></span>
                   <% } else { %>
                     <span class="text-muted">No payment record</span>
+                  <% } %>
+                </td>
+                <td class="text-nowrap">
+                  <% if (b.booking_status === 'pending') { %>
+                    <a href="/bookings/<%= b.booking_id %>/reschedule" class="btn btn-sm btn-outline-secondary">Reschedule</a>
+                    <form action="/bookings/<%= b.booking_id %>/cancel" method="POST" class="d-inline"
+                          onsubmit="return confirm('Are you sure you want to cancel this booking?');">
+                      <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
+                    </form>
+                  <% } else { %>
+                    <span class="text-muted">—</span>
                   <% } %>
                 </td>
               </tr>

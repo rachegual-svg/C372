@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin - Bookings</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bookings-page">
+  <%- include('partials/navbar') %>
+
+  <%
+    const statusClass = (status) =>
+      'status-pill status-' + String(status || 'unknown').toLowerCase().replace(/_/g, '-');
+
+    // Buttons shown for each current status (must match ALLOWED_TRANSITIONS on the server)
+    const actionsFor = (current) =>
+      Object.keys(transitions).filter(next => transitions[next].includes(current));
+
+    const actionLabel = { confirmed: 'Confirm', completed: 'Mark completed', cancelled: 'Cancel' };
+    const actionClass = { confirmed: 'btn-outline-primary', completed: 'btn-outline-success', cancelled: 'btn-outline-danger' };
+    const actionConfirm = {
+      confirmed: 'Confirm this booking?',
+      completed: 'Mark this booking as completed? A journal entry will be added for the pet.',
+      cancelled: 'Are you sure you want to cancel this booking?'
+    };
+  %>
+
+  <main class="container">
+    <div class="bookings-header">
+      <div>
+        <p class="bookings-eyebrow">ADMINISTRATION</p>
+        <h1>All Bookings</h1>
+      </div>
+      <form method="GET" action="/admin/bookings" class="d-flex align-items-center gap-2">
+        <label for="status" class="form-label mb-0">Status</label>
+        <select id="status" name="status" class="form-select" onchange="this.form.submit()">
+          <option value="">All</option>
+          <% for (let i = 0; i < statuses.length; i++) { %>
+            <option value="<%= statuses[i] %>" <%= selectedStatus === statuses[i] ? 'selected' : '' %>><%= statuses[i] %></option>
+          <% } %>
+        </select>
+        <noscript><button type="submit" class="btn btn-outline-secondary">Filter</button></noscript>
+      </form>
+    </div>
+
+    <% if (messages && messages.length) { %>
+      <% for (let i = 0; i < messages.length; i++) { %>
+        <div class="alert alert-success" role="status"><%= messages[i] %></div>
+      <% } %>
+    <% } %>
+    <% if (errors && errors.length) { %>
+      <% for (let i = 0; i < errors.length; i++) { %>
+        <div class="alert alert-danger" role="alert"><%= errors[i] %></div>
+      <% } %>
+    <% } %>
+
+    <p class="bookings-note">Payments are not processed in this demo.</p>
+
+    <% if (!bookings.length) { %>
+      <div class="bookings-empty">
+        <p class="mb-0">No bookings found<%= selectedStatus ? ' with status "' + selectedStatus + '"' : '' %>.</p>
+      </div>
+    <% } else { %>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Owner</th>
+              <th scope="col">Pet</th>
+              <th scope="col">Service</th>
+              <th scope="col">Date &amp; Time</th>
+              <th scope="col">Price</th>
+              <th scope="col">Booking</th>
+              <th scope="col">Payment</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% for (let i = 0; i < bookings.length; i++) { %>
+              <% const b = bookings[i]; %>
+              <% const actions = actionsFor(b.booking_status); %>
+              <tr>
+                <td><%= b.booking_id %></td>
+                <td><%= b.owner_name %> <span class="text-muted">(<%= b.owner_username %>)</span></td>
+                <td><%= b.pet_name %> <span class="text-muted">(<%= b.pet_species %>)</span></td>
+                <td>
+                  <% if (b.service_icon) { %><span class="service-icon" aria-hidden="true"><%= b.service_icon %></span><% } %>
+                  <%= b.service_name %>
+                </td>
+                <td class="text-nowrap"><%= b.booking_date %> · <%= b.time_slot %></td>
+                <td>S$<%= Number(b.booked_price).toFixed(2) %></td>
+                <td><span class="<%= statusClass(b.booking_status) %>"><%= b.booking_status %></span></td>
+                <td>
+                  <% if (b.payment_status) { %>
+                    <span class="<%= statusClass(b.payment_status) %>"><%= b.payment_status %></span>
+                  <% } else { %>
+                    <span class="text-muted">None</span>
+                  <% } %>
+                </td>
+                <td class="text-nowrap">
+                  <% if (!actions.length) { %>
+                    <span class="text-muted">—</span>
+                  <% } %>
+                  <% for (let a = 0; a < actions.length; a++) { %>
+                    <form action="/admin/bookings/<%= b.booking_id %>/status" method="POST" class="d-inline"
+                          onsubmit="return confirm('<%= actionConfirm[actions[a]] %>');">
+                      <input type="hidden" name="status" value="<%= actions[a] %>">
+                      <input type="hidden" name="returnStatus" value="<%= selectedStatus %>">
+                      <button type="submit" class="btn btn-sm <%= actionClass[actions[a]] %>"><%= actionLabel[actions[a]] %></button>
+                    </form>
+                  <% } %>
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

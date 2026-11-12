@@ -39,59 +39,159 @@
   filter: brightness(0);
 }
 
+/* Full-screen hero: text on the left, 3D dog on the right. Stacks on phones. */
 .home-hero {
   min-height: calc(100vh - 76px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem clamp(.75rem, 4vw, 3rem) 3rem;
+  padding: 1rem clamp(1rem, 4vw, 3.5rem) 3rem;
 }
 
-.hero-art {
-  position: relative;
+.hero-grid {
   width: min(100%, 1250px);
-  line-height: 0;
+  display: grid;
+  /* 45% text / 55% dog on desktop */
+  grid-template-columns: minmax(0, 45fr) minmax(0, 55fr);
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 4rem);
 }
 
-.hero-illustration {
-  display: block;
+.hero-copy {
+  text-align: left;
+}
+
+/* "Pet Care" on a red banner, like the original illustration */
+.hero-title {
+  margin: 0 0 1.25rem;
+  line-height: 1;
+}
+
+.hero-title span {
+  display: inline-block;
+  padding: .3em .55em .35em;
+  border-radius: 46% 54% 42% 58% / 58% 46% 54% 42%;
+  color: var(--pet-cream);
+  background: var(--pet-red);
+  font-size: clamp(2.8rem, 7vw, 5.5rem);
+  font-weight: 900;
+  letter-spacing: -.01em;
+  transform: rotate(-2deg);
+}
+
+.hero-welcome {
+  max-width: 22ch;
+  margin: 0 0 2rem;
+  color: var(--pet-ink);
+  font-size: clamp(1.25rem, 2.4vw, 1.9rem);
+  line-height: 1.25;
+}
+
+/* Normal call-to-action button (replaces the old bone overlay link) */
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: .75rem 2rem;
+  border: 3px solid #744537;
+  border-radius: 999px;
+  color: #744537;
+  background: #fcf6e6;
+  font-size: clamp(1rem, 1.6vw, 1.2rem);
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 4px 0 #744537;
+  transition: transform .18s ease, color .18s ease, box-shadow .18s ease;
+}
+
+.hero-cta:hover,
+.hero-cta:focus-visible {
+  color: var(--pet-red);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 #744537;
+}
+
+.hero-cta:focus-visible {
+  outline: 3px solid var(--pet-red);
+  outline-offset: 3px;
+}
+
+/* 3D dog stage */
+.hero-dog {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#dog-stage {
+  position: relative;
   width: 100%;
-  height: auto;
+  height: 600px;
+  border-radius: 28px;
+  background: transparent;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
 }
 
-/* Sits on top of the blank bone in the supplied PNG. */
-.bone-button {
+#dog-stage canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+#dog-stage:focus-visible {
+  outline: 3px solid var(--pet-red);
+  outline-offset: 4px;
+}
+
+#dog-stage.is-hovering-dog {
+  cursor: pointer;
+}
+
+/* Loading / error message, centred over the stage */
+.dog-status {
   position: absolute;
-  left: 66%;
-  top: 65%;
-  width: 21.5%;
-  min-height: 8.5%;
-  transform: translate(-50%, -50%);
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: .65rem .8rem;
-  border: 0;
-  border-radius: 999px;
+  margin: 0;
+  padding: 1rem;
   color: #744537;
-  font-size: clamp(.7rem, 1.6vw, 1.25rem);
-  font-weight: 800;
-  line-height: 1.1;
+  font-size: 1.1rem;
+  font-weight: 700;
   text-align: center;
-  text-decoration: none;
-  white-space: normal;
-  transition: transform .18s ease, color .18s ease;
+  pointer-events: none;
 }
 
-.bone-button:hover,
-.bone-button:focus-visible {
-  color: var(--pet-red);
-  transform: translate(-50%, -50%) scale(1.06);
+.dog-status[hidden] {
+  display: none;
 }
 
-.bone-button:focus-visible {
-  outline: 3px solid var(--pet-red);
-  outline-offset: 3px;
+.dog-caption {
+  min-height: 1.5em;
+  margin: .5rem 0 0;
+  color: var(--pet-ink);
+  font-size: 1.15rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-copy {
+    text-align: center;
+  }
+
+  .hero-welcome {
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 
 @media (max-width: 600px) {
@@ -101,12 +201,11 @@
 
   .home-hero {
     min-height: calc(100vh - 64px);
-    padding: .5rem .35rem 1.5rem;
+    padding: .5rem 1rem 1.5rem;
   }
 
-  .bone-button {
-    padding: .25rem;
-    font-size: clamp(.55rem, 2.2vw, .8rem);
+  #dog-stage {
+    height: 380px;
   }
 }
 
@@ -1565,7 +1664,6 @@ body:has(.container) button:focus-visible {
   white-space: nowrap;
 }
 
-:is(.bookings-page, .services-page) .status-confirmed,
 :is(.bookings-page, .services-page) .status-approved,
 :is(.bookings-page, .services-page) .status-paid,
 :is(.bookings-page, .services-page) .status-completed,
@@ -1582,10 +1680,71 @@ body:has(.container) button:focus-visible {
 
 :is(.bookings-page, .services-page) .status-payment-failed,
 :is(.bookings-page, .services-page) .status-failed,
-:is(.bookings-page, .services-page) .status-declined,
-:is(.bookings-page, .services-page) .status-cancelled {
+:is(.bookings-page, .services-page) .status-declined {
   color: #A83A3E;
   background: #FBE4DF;
+}
+
+/* Booking status badges: pending = yellow (above), confirmed = blue,
+   completed = green (above), cancelled = grey */
+:is(.bookings-page, .services-page) .status-confirmed {
+  color: #1F4E79;
+  background: #DCEAF7;
+}
+
+:is(.bookings-page, .services-page) .status-cancelled {
+  color: #5F5A55;
+  background: #E7E4E0;
+}
+
+/* Service icon (emoji) next to a service name */
+:is(.bookings-page, .services-page) .service-icon {
+  margin-right: .35rem;
+  font-size: 1.15em;
+}
+
+/* Service card details */
+.services-page .service-meta {
+  margin-top: .35rem;
+  color: var(--pet-muted);
+  font-size: .85rem;
+  font-weight: 600;
+}
+
+.services-page .service-description {
+  margin-top: .35rem;
+  color: var(--pet-brown);
+  font-size: .9rem;
+}
+
+.services-page .service-summary {
+  border: 1px solid var(--pet-border);
+  border-radius: 18px;
+}
+
+/* Time slot picker */
+.services-page .slot-group-label {
+  margin-bottom: .4rem;
+  color: var(--pet-muted);
+  font-size: .85rem;
+  font-weight: 700;
+}
+
+.services-page .slot-btn {
+  min-width: 5.5rem;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+.services-page .btn-check:checked + .slot-btn {
+  color: #fff;
+  background: var(--pet-coral);
+  border-color: var(--pet-coral);
+}
+
+.services-page .btn-check:disabled + .slot-btn {
+  text-decoration: line-through;
+  opacity: .5;
 }
 
 /* Book-a-service form */

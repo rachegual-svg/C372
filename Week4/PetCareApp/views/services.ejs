@@ -40,14 +40,15 @@
         <p class="mb-0">There are no services available to book right now.</p>
       </div>
     <% } else { %>
-      <form action="/services/book" method="POST" class="services-form">
+      <form action="/services/book" method="POST" class="services-form" id="bookingForm">
         <div class="row g-3 mb-4">
           <div class="col-md-6">
             <label for="petId" class="form-label">Pet</label>
             <select id="petId" name="petId" class="form-select" required>
-              <option value="">Select a pet</option>
+              <option value="" data-species="">Select a pet</option>
               <% for (let i = 0; i < pets.length; i++) { %>
-                <option value="<%= pets[i].id %>" <%= selectedPetId === String(pets[i].id) ? 'selected' : '' %>>
+                <option value="<%= pets[i].id %>" data-species="<%= pets[i].species %>"
+                  <%= selectedPetId === String(pets[i].id) ? 'selected' : '' %>>
                   <%= pets[i].name %> (<%= pets[i].species %>)
                 </option>
               <% } %>
@@ -62,22 +63,43 @@
 
         <fieldset class="mb-4">
           <legend>Choose a service</legend>
+          <p id="noServicesForPet" class="bookings-note" hidden>No services are available for this pet.</p>
           <div class="row g-3">
             <% for (let i = 0; i < services.length; i++) { %>
-              <div class="col-md-6 col-lg-4">
-                <label class="card service-option h-100" for="service-<%= services[i].id %>">
+              <% const svc = services[i]; %>
+              <div class="col-md-6 col-lg-4 service-col" data-species="<%= svc.species %>"
+                <%= svc.suitsSelectedPet ? '' : 'hidden' %>>
+                <label class="card service-option h-100" for="service-<%= svc.id %>">
                   <div class="d-flex align-items-start gap-3">
-                    <input class="form-check-input mt-1" id="service-<%= services[i].id %>"
-                      type="radio" name="serviceId" value="<%= services[i].id %>" required>
-                    <span class="d-flex justify-content-between align-items-start gap-3 w-100">
-                      <span class="service-name"><%= services[i].name %></span>
-                      <span class="service-price">S$<%= Number(services[i].price).toFixed(2) %></span>
+                    <input class="form-check-input mt-1" id="service-<%= svc.id %>"
+                      type="radio" name="serviceId" value="<%= svc.id %>" required>
+                    <span class="w-100">
+                      <span class="d-flex justify-content-between align-items-start gap-3">
+                        <span class="service-name">
+                          <% if (svc.icon) { %><span class="service-icon" aria-hidden="true"><%= svc.icon %></span><% } %>
+                          <%= svc.name %>
+                        </span>
+                        <span class="service-price">S$<%= Number(svc.price).toFixed(2) %></span>
+                      </span>
+                      <span class="service-meta d-block">
+                        <%= svc.duration_minutes %> min ·
+                        <%= svc.species === 'All' ? 'All pets' : svc.species.split(',').join(', ') %>
+                      </span>
+                      <% if (svc.description) { %>
+                        <span class="service-description d-block"><%= svc.description %></span>
+                      <% } %>
                     </span>
                   </div>
                 </label>
               </div>
             <% } %>
           </div>
+        </fieldset>
+
+        <fieldset class="mb-4">
+          <legend>Choose a time slot</legend>
+          <%- include('partials/slotPicker', { slotGroups, selectedSlot: '' }) %>
+          <p id="slotStatus" class="bookings-note mb-0" aria-live="polite"></p>
         </fieldset>
 
         <p class="bookings-note">Bookings and payments are recorded as pending. No payment is processed here.</p>
@@ -87,5 +109,59 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/slotAvailability.js"></script>
+  <script>
+    (function () {
+      var form = document.getElementById('bookingForm');
+      if (!form) return;
+
+      var petSelect = document.getElementById('petId');
+      var dateInput = document.getElementById('bookingDate');
+      var noServicesMsg = document.getElementById('noServicesForPet');
+      var cards = form.querySelectorAll('.service-col');
+
+      // Hide service cards that don't suit the selected pet's species (case-insensitive).
+      // The server checks this again when the booking is submitted.
+      function filterServices() {
+        var option = petSelect.options[petSelect.selectedIndex];
+        var petSpecies = (option.getAttribute('data-species') || '').trim().toLowerCase();
+        var visible = 0;
+
+        cards.forEach(function (card) {
+          var list = (card.getAttribute('data-species') || 'All').split(',').map(function (s) {
+            return s.trim().toLowerCase();
+          });
+          var suits = !petSpecies || list.indexOf('all') !== -1 || list.indexOf(petSpecies) !== -1;
+          card.hidden = !suits;
+          if (suits) visible++;
+
+          var radio = card.querySelector('input[type="radio"]');
+          if (!suits && radio.checked) radio.checked = false;
+        });
+
+        noServicesMsg.hidden = visible > 0;
+      }
+
+      function refreshSlots() {
+        var checked = form.querySelector('input[name="serviceId"]:checked');
+        SlotAvailability.refresh({
+          form: form,
+          serviceId: checked ? checked.value : '',
+          petId: petSelect.value,
+          date: dateInput.value,
+          statusEl: document.getElementById('slotStatus')
+        });
+      }
+
+      petSelect.addEventListener('change', function () { filterServices(); refreshSlots(); });
+      dateInput.addEventListener('change', refreshSlots);
+      form.querySelectorAll('input[name="serviceId"]').forEach(function (radio) {
+        radio.addEventListener('change', refreshSlots);
+      });
+
+      filterServices();
+      refreshSlots();
+    })();
+  </script>
 </body>
 </html>

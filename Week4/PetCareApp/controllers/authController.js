@@ -3,11 +3,15 @@ const petModel = require('../models/petModel');
 const sha256Hash = require('../helpers/hash');
 
 function showSignup(req, res) {
-  res.render('signup', { session: req.session });
+  // File is views/signUp.ejs: the name must match exactly on case-sensitive systems
+  res.render('signUp', { session: req.session });
 }
 
 function signup(req, res) {
-  const { username, password, name, role, pet_name, species, breed, age } = req.body;
+  // Any submitted "role" is ignored: new accounts are always plain users.
+  // Admins can only be created directly in the database.
+  const { username, password, name, pet_name, species, breed, age } = req.body;
+  const role = 'user';
   let petImage;
 
   if (req.file) {

@@ -1,0 +1,17 @@
+<%# Time slot radios. Slots come from config/timeSlots.js (shared with the server). %>
+<% for (let g = 0; g < slotGroups.length; g++) { %>
+  <div class="slot-group mb-3">
+    <p class="slot-group-label"><%= slotGroups[g].label %></p>
+    <div class="d-flex flex-wrap gap-2">
+      <% for (let s = 0; s < slotGroups[g].slots.length; s++) { %>
+        <% const slot = slotGroups[g].slots[s]; %>
+        <% const slotId = 'slot-' + slot.replace(':', ''); %>
+        <input type="radio" class="btn-check" name="timeSlot" id="<%= slotId %>"
+          value="<%= slot %>" autocomplete="off" required
+          <%= selectedSlot === slot ? 'checked' : '' %>>
+        <label class="btn btn-outline-secondary slot-btn" for="<%= slotId %>"
+          data-slot-label="<%= slot %>"><%= slot %></label>
+      <% } %>
+    </div>
+  </div>
+<% } %>
